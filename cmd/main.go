@@ -1,9 +1,23 @@
 package main
 
-import "github.com/gacarneirojr/fc-upload-videos-s3-go/internal"
+import (
+	"fmt"
+
+	"github.com/gacarneirojr/fc-upload-videos-s3-go/internal"
+)
 
 func main() {
 
-	internal.File("drmsonus", "1")
+	file := internal.Videos{
+		Repo:    "1",
+		Chapter: "2",
+	}
+
+	result, err := file.GetFilesPath("Não")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(result)
 
 }
