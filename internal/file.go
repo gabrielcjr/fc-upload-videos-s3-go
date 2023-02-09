@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 
 	vidio "github.com/AlexEidt/Vidio"
@@ -15,12 +16,32 @@ type Videos struct {
 
 func (v *Videos) CreateFileVideosDuration() {
 	if v.Repo == "" || v.Chapter == "" {
-		fmt.Println("Error: repo and chapter are required")
+		fmt.Println("Error: repo and/or chapter are required")
 		os.Exit(1)
 	}
+	v.renameFiles()
+
+	files, err := v.getFilesPath(false)
+
+	if err != nil {
+		panic(err)
+	}
+
+	var videos []string
+
+	for _, file := range files {
+		seconds := v.getDuration("./videos/" + file)
+		line := v.Repo + v.Chapter + file + " " + v.formatTime(seconds) + "\r\n"
+		videos = append(videos, line)
+		fmt.Println(videos)
+	}
+
+	v.saveInFile(videos)
+
+	fmt.Println("File created successfully")
 }
 
-func (v *Videos) GetFilesPath(fullPath bool) ([]string, error) {
+func (v *Videos) getFilesPath(fullPath bool) ([]string, error) {
 	path, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -53,7 +74,7 @@ func (v *Videos) GetFilesPath(fullPath bool) ([]string, error) {
 	return list, nil
 }
 
-func (v *Videos) SaveInFile(fileName []string) {
+func (v *Videos) saveInFile(fileName []string) {
 	f, err := os.Create("videos.md")
 
 	if err != nil {
@@ -73,22 +94,25 @@ func (v *Videos) SaveInFile(fileName []string) {
 	fmt.Printf("Video %s added\n", fileName)
 }
 
-func (v *Videos) GetDuration(pathToVideo string) float64 {
+func (v *Videos) getDuration(pathToVideo string) int {
 	video, err := vidio.NewVideo(pathToVideo)
 	if err != nil {
 		panic(err)
 	}
-	return video.Duration()
+
+	rawTime := video.Duration()
+
+	return int(math.Round(rawTime))
 }
 
-func (v *Videos) FormatTime(inSeconds int) string {
+func (v *Videos) formatTime(inSeconds int) string {
 	minutes := inSeconds / 60
 	seconds := inSeconds % 60
 	str := fmt.Sprintf("%02d:%02d", minutes, seconds)
 	return str
 }
 
-func (v *Videos) RemoveAccents(s string) string {
+func (v *Videos) normalizeFilename(s string) string {
 	// A map of accented characters and their equivalent without accents
 	accents := map[rune]rune{
 		'À': 'A', 'Á': 'A', 'Â': 'A', 'Ã': 'A', 'Ä': 'A', 'Å': 'A',
@@ -116,16 +140,14 @@ func (v *Videos) RemoveAccents(s string) string {
 	return string(result)
 }
 
-func (v *Videos) RenameFiles() {
-	files, err := v.GetFilesPath(true)
-	// fmt.Print(files)
+func (v *Videos) renameFiles() {
+	files, err := v.getFilesPath(false)
 	if err != nil {
 		panic(err)
 	}
 
 	for _, file := range files {
-		fmt.Println(file)
-		fmt.Println(v.RemoveAccents(file))
-		os.Rename(file, v.RemoveAccents(file))
+		file = "./videos/" + file
+		os.Rename(file, v.normalizeFilename(file))
 	}
 }
