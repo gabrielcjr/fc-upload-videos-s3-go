@@ -1,6 +1,6 @@
 package internal
 
-var repositories = map[string]string{
+var Repositories = map[string]string{
 
 	"TYPESCRIPT":    "code/fullcycle/fc3/microsservico-catalogo-de-videos-com-typescript/",
 	"DOTNET":        "code/fullcycle/fc3/microsservico-catalogo-de-videos-com-dotnet/",

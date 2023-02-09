@@ -84,7 +84,6 @@ func (v *Videos) saveInFile(fileName []string) {
 	defer f.Close()
 
 	for _, fileName := range fileName {
-		fileName += "\n"
 		_, err2 := f.WriteString(fileName)
 		if err2 != nil {
 			log.Fatal(err2)
