@@ -22,12 +22,18 @@ func main() {
 
 	file.SaveInFile(result)
 
-	videoTime := file.GetDuration("./videos/22.01-boas-vindas-ao-modulo-de-infrastructure-de-video.mp4")
+	videoTime := file.GetDuration("./videos/22.01-boás-vindas-ao-modulo-de-infrastructure-de-video.mp4")
 
 	roundVideoTime := int(math.Round(videoTime))
 
 	result1 := file.FormatTime(roundVideoTime)
 
 	fmt.Print((result1))
+
+	result2 := file.RemoveAccents("áéíóú ")
+
+	fmt.Print(result2)
+
+	file.RenameFiles()
 
 }

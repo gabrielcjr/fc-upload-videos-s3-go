@@ -88,34 +88,44 @@ func (v *Videos) FormatTime(inSeconds int) string {
 	return str
 }
 
-// func (v *Videos) filenameNormalized(file string) {
-// 	characters := map[string]string{
-// 		"a": "á|à|ã|â",
-// 		"A": "Á|À|Ã|Â",
-// 		"e": "é|ê",
-// 		"E": "É|Ê",
-// 		"i": "í",
-// 		"I": "Í",
-// 		"o": "ó|õ|ô",
-// 		"O": "Ó|Õ|Ô",
-// 		"u": "ú",
-// 		"U": "Ú",
-// 		"c": "ç",
-// 		"C": "Ç",
-// 		"-": " ",
-// 	  }
+func (v *Videos) RemoveAccents(s string) string {
+	// A map of accented characters and their equivalent without accents
+	accents := map[rune]rune{
+		'À': 'A', 'Á': 'A', 'Â': 'A', 'Ã': 'A', 'Ä': 'A', 'Å': 'A',
+		'à': 'a', 'á': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a', 'å': 'a',
+		'È': 'E', 'É': 'E', 'Ê': 'E', 'Ë': 'E',
+		'è': 'e', 'é': 'e', 'ê': 'e', 'ë': 'e',
+		'Ì': 'I', 'Í': 'I', 'Î': 'I', 'Ï': 'I',
+		'ì': 'i', 'í': 'i', 'î': 'i', 'ï': 'i',
+		'Ò': 'O', 'Ó': 'O', 'Ô': 'O', 'Õ': 'O', 'Ö': 'O', 'Ø': 'O',
+		'ò': 'o', 'ó': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o', 'ø': 'o',
+		'Ù': 'U', 'Ú': 'U', 'Û': 'U', 'Ü': 'U',
+		'ù': 'u', 'ú': 'u', 'û': 'u', 'ü': 'u',
+		'Ý': 'Y', 'ý': 'y', 'ÿ': 'y', ' ': '-',
+	}
 
-// 	  str := file
-// 	  for k, name := range characters {
-// 		str = str.replace(new RegExp)
-// 		}
-// 	}
-// 	  for (const i in map) {
-// 		str = str.replace(new RegExp(map[i], 'g'), i)
-// 	  }
-// 	  return str
-// }
+	var result []rune
+	for _, r := range s {
+		if replacement, ok := accents[r]; ok {
+			result = append(result, replacement)
+		} else {
+			result = append(result, r)
+		}
+	}
 
-func (v *Videos) renameFiles() {
-	// To implement
+	return string(result)
+}
+
+func (v *Videos) RenameFiles() {
+	files, err := v.GetFilesPath(true)
+	// fmt.Print(files)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, file := range files {
+		fmt.Println(file)
+		fmt.Println(v.RemoveAccents(file))
+		os.Rename(file, v.RemoveAccents(file))
+	}
 }
