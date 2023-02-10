@@ -73,4 +73,23 @@ func main() {
 		waitGroup.Wait()
 	}
 
+	prompt4 := promptui.Prompt{
+		Label:     "Deseja alterar as permissões no S3 agora?",
+		IsConfirm: true,
+	}
+
+	isChangePermission, err := prompt4.Run()
+
+	if isChangePermission == "y" {
+		for k, _ := range fileNames {
+			aws := internal.AWSUpload{
+				S3Repo:          internal.Repositories[repo],
+				S3Chapter:       chapter + "/",
+				FileName:        fileNames[k],
+				VideosLocalPath: fullLocalPath[k],
+			}
+			aws.ChangePathToPublicRead()
+		}
+	}
+
 }
