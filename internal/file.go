@@ -21,7 +21,7 @@ func (v *Videos) CreateFileVideosDuration() {
 	}
 	v.renameFiles()
 
-	files, err := v.getFilesPath(false)
+	files, err := v.GetFilesPath(false)
 
 	if err != nil {
 		panic(err)
@@ -41,7 +41,7 @@ func (v *Videos) CreateFileVideosDuration() {
 	fmt.Println("File created successfully")
 }
 
-func (v *Videos) getFilesPath(fullPath bool) ([]string, error) {
+func (v *Videos) GetFilesPath(fullPath bool) ([]string, error) {
 	path, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -61,7 +61,7 @@ func (v *Videos) getFilesPath(fullPath bool) ([]string, error) {
 	if fullPath == true {
 		for _, fileName := range files {
 			fileNameString := fileName.Name()
-			fullPath := path + fileNameString
+			fullPath := path + "/videos/" + fileNameString
 			list = append(list, fullPath)
 		}
 		return list, nil
@@ -140,7 +140,7 @@ func (v *Videos) normalizeFilename(s string) string {
 }
 
 func (v *Videos) renameFiles() {
-	files, err := v.getFilesPath(false)
+	files, err := v.GetFilesPath(false)
 	if err != nil {
 		panic(err)
 	}

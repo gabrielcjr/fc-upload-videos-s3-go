@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/gacarneirojr/fc-upload-videos-s3-go/internal"
 	"github.com/manifoldco/promptui"
@@ -38,5 +39,38 @@ func main() {
 	}
 
 	file.CreateFileVideosDuration()
+
+	fullLocalPath, _ := file.GetFilesPath(true)
+	fileNames, _ := file.GetFilesPath(false)
+
+	prompt3 := promptui.Prompt{
+		Label:     "Fazer upload agora?",
+		IsConfirm: true,
+	}
+
+	isUpload, err := prompt3.Run()
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(isUpload)
+
+	waitGroup := sync.WaitGroup{}
+	fmt.Println(len(fileNames))
+	waitGroup.Add(len(fileNames))
+
+	if isUpload == "y" {
+		for k, _ := range fileNames {
+			aws := internal.AWSUpload{
+				S3Repo:          internal.Repositories[repo],
+				S3Chapter:       chapter + "/",
+				FileName:        fileNames[k],
+				VideosLocalPath: fullLocalPath[k],
+			}
+			go aws.UploadVideos(&waitGroup)
+		}
+		waitGroup.Wait()
+	}
 
 }

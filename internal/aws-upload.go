@@ -2,8 +2,10 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -12,9 +14,15 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func main() {
+type AWSUpload struct {
+	S3Repo          string
+	S3Chapter       string
+	FileName        string
+	VideosLocalPath string
+}
+
+func (a *AWSUpload) UploadVideos(wg *sync.WaitGroup) {
 	err := godotenv.Load()
-	// Load the Shared AWS Configuration (~/.aws/config)
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "")),
 	)
@@ -22,19 +30,26 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Create an Amazon S3 service client
 	client := s3.NewFromConfig(cfg)
 
-	// Get the first page of results for ListObjectsV2 for a bucket
-	output, err := client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
-		Bucket: aws.String("drmsonus"),
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
+	file, err := os.Open(a.VideosLocalPath)
 
-	log.Println("first page results:")
-	for _, object := range output.Contents {
-		log.Printf("key=%s size=%d", aws.ToString(object.Key), object.Size)
+	pathToS3 := a.S3Repo + a.S3Chapter + a.FileName
+
+	if err != nil {
+		log.Printf("Couldn't open file %v to upload. Here's why: %v\n", a.FileName, err)
+	} else {
+		defer file.Close()
+		_, err := client.PutObject(context.TODO(), &s3.PutObjectInput{
+			Bucket: aws.String(os.Getenv("AWS_BUCKET_NAME_UPLOAD")),
+			Key:    aws.String(pathToS3),
+			Body:   file,
+		})
+		if err != nil {
+			log.Printf("Couldn't upload file %v to %v:%v. Here's why: %v\n",
+				a.FileName, os.Getenv("AWS_BUCKET_NAME_UPLOAD"), pathToS3, err)
+		}
+		fmt.Println("File uploaded to", pathToS3)
+		wg.Done()
 	}
 }
