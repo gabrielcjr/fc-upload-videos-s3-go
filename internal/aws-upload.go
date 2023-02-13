@@ -69,7 +69,7 @@ func (a *AWSUpload) UploadVideos(wg *sync.WaitGroup) {
 	}
 }
 
-func (a *AWSUpload) ChangePathToPublicRead() {
+func (a *AWSUpload) ChangePathToPublicRead(wg *sync.WaitGroup) {
 	// client := a.Client("us-east-1", os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
 	err := godotenv.Load()
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(os.Getenv("AWS_REGION")),
@@ -123,5 +123,6 @@ func (a *AWSUpload) ChangePathToPublicRead() {
 		if err != nil {
 			panic(err)
 		}
+		wg.Done()
 	}
 }

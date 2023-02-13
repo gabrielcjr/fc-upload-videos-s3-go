@@ -80,6 +80,8 @@ func main() {
 
 	isChangePermission, err := prompt4.Run()
 
+	waitGroup.Add(len(fileNames))
+
 	if isChangePermission == "y" {
 		for k, _ := range fileNames {
 			aws := internal.AWSUpload{
@@ -88,8 +90,9 @@ func main() {
 				FileName:        fileNames[k],
 				VideosLocalPath: fullLocalPath[k],
 			}
-			aws.ChangePathToPublicRead()
+			go aws.ChangePathToPublicRead(&waitGroup)
 		}
+		waitGroup.Wait()
 	}
 
 }

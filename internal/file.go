@@ -33,7 +33,6 @@ func (v *Videos) CreateFileVideosDuration() {
 		seconds := v.getDuration("./videos/" + file)
 		line := v.Repo + v.Chapter + file + " " + v.formatTime(seconds) + "\r\n"
 		videos = append(videos, line)
-		fmt.Println(videos)
 	}
 
 	v.saveInFile(videos)
@@ -89,8 +88,6 @@ func (v *Videos) saveInFile(fileName []string) {
 			log.Fatal(err2)
 		}
 	}
-
-	fmt.Printf("Video %s added\n", fileName)
 }
 
 func (v *Videos) getDuration(pathToVideo string) int {
