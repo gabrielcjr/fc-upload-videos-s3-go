@@ -69,7 +69,7 @@ func (a *AWSUpload) UploadVideos(wg *sync.WaitGroup) {
 	}
 }
 
-func (a *AWSUpload) ChangePathToPublicRead(wg *sync.WaitGroup) {
+func (a *AWSUpload) ChangePathToPublicRead() {
 	// client := a.Client("us-east-1", os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
 	err := godotenv.Load()
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(os.Getenv("AWS_REGION")),
@@ -93,36 +93,44 @@ func (a *AWSUpload) ChangePathToPublicRead(wg *sync.WaitGroup) {
 
 	result := contents.Contents
 
+	fmt.Println(len(result))
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(result))
+
 	for _, content := range result {
 		fmt.Println(*content.Key)
-		_, err := client.PutObjectAcl(context.TODO(), &s3.PutObjectAclInput{
-			Bucket: aws.String(os.Getenv("AWS_BUCKET_NAME_READ")),
-			Key:    content.Key,
-			AccessControlPolicy: &types.AccessControlPolicy{
-				Grants: []types.Grant{
-					{
-						Grantee: &types.Grantee{
-							Type:        "CanonicalUser",
-							DisplayName: aws.String("wesleywillians"),
-							ID:          aws.String("a3edb89dc8762b1d543412e1b0999c8b17e8a1e94c3694bf2e35d4b61499419d"),
-						}, Permission: "FULL_CONTROL",
+		go func() {
+			defer wg.Done()
+			_, err := client.PutObjectAcl(context.TODO(), &s3.PutObjectAclInput{
+				Bucket: aws.String(os.Getenv("AWS_BUCKET_NAME_READ")),
+				Key:    content.Key,
+				AccessControlPolicy: &types.AccessControlPolicy{
+					Grants: []types.Grant{
+						{
+							Grantee: &types.Grantee{
+								Type:        "CanonicalUser",
+								DisplayName: aws.String("wesleywillians"),
+								ID:          aws.String("a3edb89dc8762b1d543412e1b0999c8b17e8a1e94c3694bf2e35d4b61499419d"),
+							}, Permission: "FULL_CONTROL",
+						},
+						{
+							Grantee: &types.Grantee{
+								Type: "Group",
+								URI:  aws.String("http://acs.amazonaws.com/groups/global/AllUsers"),
+							}, Permission: "READ",
+						},
 					},
-					{
-						Grantee: &types.Grantee{
-							Type: "Group",
-							URI:  aws.String("http://acs.amazonaws.com/groups/global/AllUsers"),
-						}, Permission: "READ",
+					Owner: &types.Owner{
+						DisplayName: aws.String("wesleywillians"),
+						ID:          aws.String("a3edb89dc8762b1d543412e1b0999c8b17e8a1e94c3694bf2e35d4b61499419d"),
 					},
 				},
-				Owner: &types.Owner{
-					DisplayName: aws.String("wesleywillians"),
-					ID:          aws.String("a3edb89dc8762b1d543412e1b0999c8b17e8a1e94c3694bf2e35d4b61499419d"),
-				},
-			},
-		})
-		if err != nil {
-			panic(err)
-		}
-		wg.Done()
+			})
+			if err != nil {
+				panic(err)
+			}
+		}()
 	}
+	wg.Wait()
 }

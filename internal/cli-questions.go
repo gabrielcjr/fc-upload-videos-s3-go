@@ -1,7 +1,7 @@
 package internal
 
 var Repositories = map[string]string{
-
+	"MBA":           "code/mba/solution-architecture/",
 	"TYPESCRIPT":    "code/fullcycle/fc3/microsservico-catalogo-de-videos-com-typescript/",
 	"DOTNET":        "code/fullcycle/fc3/microsservico-catalogo-de-videos-com-dotnet/",
 	"REACT":         "code/fullcycle/fc3/microsservico-administracao-do-catalogo-de-videos-com-React/",

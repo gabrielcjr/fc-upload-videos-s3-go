@@ -12,7 +12,7 @@ func main() {
 
 	prompt := promptui.Select{
 		Label: "Selecione o repositório da lista abaixo:",
-		Items: []string{"TYPESCRIPT", "DOTNET", "REACT",
+		Items: []string{"MBA", "TYPESCRIPT", "DOTNET", "REACT",
 			"JAVA", "PHP", "PYTHON", "DEPLOY_CLOUDS",
 			"GOLANG", "EDA"},
 	}
@@ -54,10 +54,7 @@ func main() {
 		fmt.Println(err)
 	}
 
-	fmt.Println(isUpload)
-
 	waitGroup := sync.WaitGroup{}
-	fmt.Println(len(fileNames))
 	waitGroup.Add(len(fileNames))
 
 	if isUpload == "y" {
@@ -90,9 +87,10 @@ func main() {
 				FileName:        fileNames[k],
 				VideosLocalPath: fullLocalPath[k],
 			}
-			go aws.ChangePathToPublicRead(&waitGroup)
+			go aws.ChangePathToPublicRead()
+			waitGroup.Done()
 		}
-		waitGroup.Wait()
 	}
+	waitGroup.Wait()
 
 }
