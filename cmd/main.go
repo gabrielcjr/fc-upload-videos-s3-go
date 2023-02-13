@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/gacarneirojr/fc-upload-videos-s3-go/internal"
+	"github.com/joho/godotenv"
 	"github.com/manifoldco/promptui"
 )
 
@@ -24,7 +26,7 @@ func main() {
 	}
 
 	prompt2 := promptui.Prompt{
-		Label: "Agora digite o número do capítulo",
+		Label: "Agora digite o nome/número do capítulo",
 	}
 
 	chapter, err := prompt2.Run()
@@ -54,8 +56,15 @@ func main() {
 		fmt.Println(err)
 	}
 
-	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(len(fileNames))
+	wg := sync.WaitGroup{}
+	wg.Add(len(fileNames))
+
+	godotenv.Load()
+
+	client := internal.AwsClient(
+		os.Getenv("AWS_REGION"),
+		os.Getenv("AWS_ACCESS_KEY_ID"),
+		os.Getenv("AWS_SECRET_ACCESS_KEY"))
 
 	if isUpload == "y" {
 		for k, _ := range fileNames {
@@ -65,9 +74,9 @@ func main() {
 				FileName:        fileNames[k],
 				VideosLocalPath: fullLocalPath[k],
 			}
-			go aws.UploadVideos(&waitGroup)
+			go aws.UploadVideos(&wg, client)
 		}
-		waitGroup.Wait()
+		wg.Wait()
 	}
 
 	prompt4 := promptui.Prompt{
@@ -75,9 +84,9 @@ func main() {
 		IsConfirm: true,
 	}
 
-	isChangePermission, err := prompt4.Run()
+	isChangePermission, _ := prompt4.Run()
 
-	waitGroup.Add(len(fileNames))
+	wg.Add(len(fileNames))
 
 	if isChangePermission == "y" {
 		for k, _ := range fileNames {
@@ -87,10 +96,9 @@ func main() {
 				FileName:        fileNames[k],
 				VideosLocalPath: fullLocalPath[k],
 			}
-			go aws.ChangePathToPublicRead()
-			waitGroup.Done()
+			go aws.ChangePathToPublicRead(client)
+			wg.Done()
 		}
 	}
-	waitGroup.Wait()
-
+	wg.Wait()
 }

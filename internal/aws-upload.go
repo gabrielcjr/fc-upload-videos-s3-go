@@ -22,31 +22,18 @@ type AWSUpload struct {
 	VideosLocalPath string
 }
 
-func (a *AWSUpload) Client(region string, id string, secretKey string) {
-	// err := godotenv.Load()
-	// cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region),
-	// 	config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(id, secretKey, "")),
-	// )
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// return s3.NewFromConfig(cfg)
-}
-
-func (a *AWSUpload) UploadVideos(wg *sync.WaitGroup) {
-	// client := a.Client(
-	// 	os.Getenv("AWS_REGION"),
-	// 	os.Getenv("AWS_ACCESS_KEY_ID"),
-	// 	os.Getenv("AWS_SECRET_ACCESS_KEY"))
-	err := godotenv.Load()
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(os.Getenv("AWS_REGION")),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "")),
+func AwsClient(region string, id string, secretKey string) *s3.Client {
+	godotenv.Load()
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(id, secretKey, "")),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
-	client := s3.NewFromConfig(cfg)
+	return s3.NewFromConfig(cfg)
+}
 
+func (a *AWSUpload) UploadVideos(wg *sync.WaitGroup, cl *s3.Client) {
 	file, err := os.Open(a.VideosLocalPath)
 
 	pathToS3 := a.S3Repo + a.S3Chapter + a.FileName
@@ -55,7 +42,7 @@ func (a *AWSUpload) UploadVideos(wg *sync.WaitGroup) {
 		log.Printf("Couldn't open file %v to upload. Here's why: %v\n", a.FileName, err)
 	} else {
 		defer file.Close()
-		_, err := client.PutObject(context.TODO(), &s3.PutObjectInput{
+		_, err := cl.PutObject(context.TODO(), &s3.PutObjectInput{
 			Bucket: aws.String(os.Getenv("AWS_BUCKET_NAME_UPLOAD")),
 			Key:    aws.String(pathToS3),
 			Body:   file,
@@ -69,23 +56,13 @@ func (a *AWSUpload) UploadVideos(wg *sync.WaitGroup) {
 	}
 }
 
-func (a *AWSUpload) ChangePathToPublicRead() {
-	// client := a.Client("us-east-1", os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"))
-	err := godotenv.Load()
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(os.Getenv("AWS_REGION")),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), "")),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	client := s3.NewFromConfig(cfg)
-
+func (a *AWSUpload) ChangePathToPublicRead(cl *s3.Client) {
 	params := &s3.ListObjectsV2Input{
 		Bucket: aws.String(os.Getenv("AWS_BUCKET_NAME_READ")),
 		Prefix: aws.String(a.S3Repo + a.S3Chapter + a.FileName),
 	}
 
-	contents, err := client.ListObjectsV2(context.Background(), params)
+	contents, err := cl.ListObjectsV2(context.Background(), params)
 
 	if err != nil {
 		panic(err)
@@ -102,7 +79,7 @@ func (a *AWSUpload) ChangePathToPublicRead() {
 		fmt.Println(*content.Key)
 		go func() {
 			defer wg.Done()
-			_, err := client.PutObjectAcl(context.TODO(), &s3.PutObjectAclInput{
+			_, err := cl.PutObjectAcl(context.TODO(), &s3.PutObjectAclInput{
 				Bucket: aws.String(os.Getenv("AWS_BUCKET_NAME_READ")),
 				Key:    content.Key,
 				AccessControlPolicy: &types.AccessControlPolicy{
