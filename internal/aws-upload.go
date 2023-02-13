@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/joho/godotenv"
 )
 
@@ -90,10 +91,37 @@ func (a *AWSUpload) ChangePathToPublicRead() {
 		panic(err)
 	}
 
-	for _, content := range contents {
-		fmt.Println(content.Key)
-		s3.PutObjectAclInput()
+	result := contents.Contents
 
+	for _, content := range result {
+		fmt.Println(*content.Key)
+		_, err := client.PutObjectAcl(context.TODO(), &s3.PutObjectAclInput{
+			Bucket: aws.String(os.Getenv("AWS_BUCKET_NAME_READ")),
+			Key:    content.Key,
+			AccessControlPolicy: &types.AccessControlPolicy{
+				Grants: []types.Grant{
+					{
+						Grantee: &types.Grantee{
+							Type:        "CanonicalUser",
+							DisplayName: aws.String("wesleywillians"),
+							ID:          aws.String("a3edb89dc8762b1d543412e1b0999c8b17e8a1e94c3694bf2e35d4b61499419d"),
+						}, Permission: "FULL_CONTROL",
+					},
+					{
+						Grantee: &types.Grantee{
+							Type: "Group",
+							URI:  aws.String("http://acs.amazonaws.com/groups/global/AllUsers"),
+						}, Permission: "READ",
+					},
+				},
+				Owner: &types.Owner{
+					DisplayName: aws.String("wesleywillians"),
+					ID:          aws.String("a3edb89dc8762b1d543412e1b0999c8b17e8a1e94c3694bf2e35d4b61499419d"),
+				},
+			},
+		})
+		if err != nil {
+			panic(err)
+		}
 	}
-
 }
