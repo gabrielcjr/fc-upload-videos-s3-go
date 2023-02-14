@@ -67,7 +67,7 @@ func main() {
 		os.Getenv("AWS_SECRET_ACCESS_KEY"))
 
 	if isUpload == "y" {
-		for k, _ := range fileNames {
+		for k := range fileNames {
 			aws := internal.AWSUpload{
 				S3Repo:          internal.Repositories[repo],
 				S3Chapter:       chapter + "/",
@@ -86,10 +86,8 @@ func main() {
 
 	isChangePermission, _ := prompt4.Run()
 
-	wg.Add(len(fileNames))
-
 	if isChangePermission == "y" {
-		for k, _ := range fileNames {
+		for k := range fileNames {
 			aws := internal.AWSUpload{
 				S3Repo:          internal.Repositories[repo],
 				S3Chapter:       chapter + "/",
@@ -97,8 +95,6 @@ func main() {
 				VideosLocalPath: fullLocalPath[k],
 			}
 			go aws.ChangePathToPublicRead(client)
-			wg.Done()
 		}
 	}
-	wg.Wait()
 }

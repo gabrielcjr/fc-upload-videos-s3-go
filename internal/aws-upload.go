@@ -61,7 +61,6 @@ func (a *AWSUpload) ChangePathToPublicRead(cl *s3.Client) {
 		Bucket: aws.String(os.Getenv("AWS_BUCKET_NAME_READ")),
 		Prefix: aws.String(a.S3Repo + a.S3Chapter + a.FileName),
 	}
-
 	contents, err := cl.ListObjectsV2(context.Background(), params)
 
 	if err != nil {

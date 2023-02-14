@@ -57,7 +57,7 @@ func (v *Videos) GetFilesPath(fullPath bool) ([]string, error) {
 	}
 
 	var list []string
-	if fullPath == true {
+	if fullPath {
 		for _, fileName := range files {
 			fileNameString := fileName.Name()
 			fullPath := path + "/videos/" + fileNameString
