@@ -69,8 +69,6 @@ func (a *AWSUpload) ChangePathToPublicRead(cl *s3.Client) {
 
 	result := contents.Contents
 
-	fmt.Println(len(result))
-
 	wg := sync.WaitGroup{}
 	wg.Add(len(result))
 

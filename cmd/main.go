@@ -94,7 +94,7 @@ func main() {
 				FileName:        fileNames[k],
 				VideosLocalPath: fullLocalPath[k],
 			}
-			go aws.ChangePathToPublicRead(client)
+			aws.ChangePathToPublicRead(client)
 		}
 	}
 }
