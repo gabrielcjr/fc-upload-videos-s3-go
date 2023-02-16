@@ -84,8 +84,8 @@ func (a *AWSUpload) ChangePathToPublicRead(cl *s3.Client) {
 						{
 							Grantee: &types.Grantee{
 								Type:        "CanonicalUser",
-								DisplayName: aws.String("wesleywillians"),
-								ID:          aws.String("a3edb89dc8762b1d543412e1b0999c8b17e8a1e94c3694bf2e35d4b61499419d"),
+								DisplayName: aws.String(os.Getenv("AWS_DISPLAY_NAME")),
+								ID:          aws.String(os.Getenv("AWS_OWNER_ID")),
 							}, Permission: "FULL_CONTROL",
 						},
 						{
@@ -96,8 +96,8 @@ func (a *AWSUpload) ChangePathToPublicRead(cl *s3.Client) {
 						},
 					},
 					Owner: &types.Owner{
-						DisplayName: aws.String("wesleywillians"),
-						ID:          aws.String("a3edb89dc8762b1d543412e1b0999c8b17e8a1e94c3694bf2e35d4b61499419d"),
+						DisplayName: aws.String(os.Getenv("AWS_DISPLAY_NAME")),
+						ID:          aws.String(os.Getenv("AWS_OWNER_ID")),
 					},
 				},
 			})

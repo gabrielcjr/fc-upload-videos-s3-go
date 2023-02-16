@@ -7,29 +7,17 @@ import (
 
 	"github.com/gacarneirojr/fc-upload-videos-s3-go/internal"
 	"github.com/joho/godotenv"
-	"github.com/manifoldco/promptui"
 )
 
 func main() {
 
-	prompt := promptui.Select{
-		Label: "Selecione o repositório da lista abaixo:",
-		Items: []string{"MBA", "TYPESCRIPT", "DOTNET", "REACT",
-			"JAVA", "PHP", "PYTHON", "DEPLOY_CLOUDS",
-			"GOLANG", "EDA"},
-	}
-
-	_, repo, err := prompt.Run()
+	_, repo, err := internal.Prompt.Run()
 
 	if err != nil {
 		fmt.Printf("Opção incorreta %s\n", err)
 	}
 
-	prompt2 := promptui.Prompt{
-		Label: "Agora digite o nome/número do capítulo",
-	}
-
-	chapter, err := prompt2.Run()
+	chapter, err := internal.Prompt2.Run()
 
 	if err != nil {
 		fmt.Printf("Opção incorreta %s\n", err)
@@ -45,12 +33,7 @@ func main() {
 	fullLocalPath, _ := file.GetFilesPath(true)
 	fileNames, _ := file.GetFilesPath(false)
 
-	prompt3 := promptui.Prompt{
-		Label:     "Fazer upload agora?",
-		IsConfirm: true,
-	}
-
-	isUpload, err := prompt3.Run()
+	isUpload, err := internal.Prompt3.Run()
 
 	if err != nil {
 		fmt.Println(err)
@@ -79,12 +62,7 @@ func main() {
 		wg.Wait()
 	}
 
-	prompt4 := promptui.Prompt{
-		Label:     "Deseja alterar as permissões no S3 agora?",
-		IsConfirm: true,
-	}
-
-	isChangePermission, _ := prompt4.Run()
+	isChangePermission, _ := internal.Prompt4.Run()
 
 	if isChangePermission == "y" {
 		for k := range fileNames {
