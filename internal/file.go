@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -31,7 +32,11 @@ func (v *Videos) CreateFileVideosDuration() {
 
 	for _, file := range files {
 		seconds := v.getDuration("./videos/" + file)
-		line := v.Repo + v.Chapter + file + " " + v.formatTime(seconds) + "\r\n"
+		formatTime, err := v.formatTime(seconds)
+		if err != nil {
+			fmt.Println("Error formatting time")
+		}
+		line := v.Repo + v.Chapter + file + " " + formatTime + "\r\n"
 		videos = append(videos, line)
 	}
 
@@ -101,11 +106,14 @@ func (v *Videos) getDuration(pathToVideo string) int {
 	return int(math.Round(rawTime))
 }
 
-func (v *Videos) formatTime(inSeconds int) string {
-	minutes := inSeconds / 60
-	seconds := inSeconds % 60
-	str := fmt.Sprintf("%02d:%02d", minutes, seconds)
-	return str
+func (v *Videos) formatTime(inSeconds int) (string, error) {
+	if inSeconds <= 5999 && inSeconds >= 0 {
+		minutes := inSeconds / 60
+		seconds := inSeconds % 60
+		str := fmt.Sprintf("%02d:%02d", minutes, seconds)
+		return str, nil
+	}
+	return "0", errors.New("Use um valor maior que 0 e menor que 5999")
 }
 
 func (v *Videos) normalizeFilename(s string) string {
@@ -121,7 +129,7 @@ func (v *Videos) normalizeFilename(s string) string {
 		'ò': 'o', 'ó': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o', 'ø': 'o',
 		'Ù': 'U', 'Ú': 'U', 'Û': 'U', 'Ü': 'U',
 		'ù': 'u', 'ú': 'u', 'û': 'u', 'ü': 'u',
-		'Ý': 'Y', 'ý': 'y', 'ÿ': 'y', ' ': '-',
+		'Ý': 'Y', 'ý': 'y', 'ÿ': 'y', ' ': '-', 'ç': 'c', 'Ç': 'C',
 	}
 
 	var result []rune

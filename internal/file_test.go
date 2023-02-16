@@ -1,7 +1,10 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,11 +18,17 @@ var videos = Videos{
 }
 
 func TestGetFilesPath(t *testing.T) {
+	err := os.Mkdir("videos", os.ModePerm)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	f, _ := os.Create("./videos/test")
 
 	defer f.Close()
 
-	defer os.Remove("./videos/test")
+	defer os.RemoveAll("./videos")
 
 	expected, _ := os.Getwd()
 
@@ -47,7 +56,7 @@ func TestGetFilesPath(t *testing.T) {
 }
 
 func TestSaveInFile(t *testing.T) {
-	fileName := []string{"videos.md"}
+	fileName := []string{"videos1.mp4"}
 
 	videos.saveInFile(fileName)
 
@@ -58,4 +67,69 @@ func TestSaveInFile(t *testing.T) {
 	expected := "videos.md"
 
 	assert.Equal(t, expected, result[0])
+
+	result1, _ := os.ReadFile("videos.md")
+
+	expected = "videos1.mp4"
+
+	assert.Equal(t, expected, string(result1))
 }
+
+func TestGetDuration(t *testing.T) {
+	out, _ := os.Create("videoTest.mp4")
+	fileToDownload := "https://sample-videos.com/video123/mp4/240/big_buck_bunny_240p_1mb.mp4"
+
+	resp, _ := http.Get(fileToDownload)
+	defer resp.Body.Close()
+	n, _ := io.Copy(out, resp.Body)
+
+	fmt.Println(n)
+
+	defer os.Remove("videoTest.mp4")
+
+	pathToFile := "videoTest.mp4"
+
+	duration := videos.getDuration(pathToFile)
+
+	assert.Equal(t, duration, 14)
+}
+
+func FuzzFormatTime(f *testing.F) {
+	seed := []int{-10, 1, 10, 180, 203, 360, 600, 2000, 7099}
+
+	for _, amount := range seed {
+		f.Add(amount)
+	}
+	f.Fuzz(func(t *testing.T, amount int) {
+		result, err := videos.formatTime(amount)
+		fmt.Println(result)
+		fmt.Println(err)
+		if err != nil {
+			expected := errors.New("Use um valor maior que 0 e menor que 5999")
+			assert.Equal(t, expected, err)
+		} else {
+			minutes := amount / 60
+			seconds := amount % 60
+			expected := fmt.Sprintf("%02d:%02d", minutes, seconds)
+			assert.Equal(t, expected, result)
+		}
+	})
+}
+
+// func FuzzNormalizeFilename(f *testing.F) {
+// 	seed := []string{"wrfgsg", "áéí", "ibjawrf89734", "edrfg sdfbsdfb", "çççttt123454  áá sdfvb"}
+
+// 	for _, fileName := range seed {
+// 		f.Add(fileName)
+// 	}
+
+// 	f.Fuzz(func(t *testing.T, fileName string) {
+// 		result := videos.normalizeFilename(fileName)
+// 		m1 := regexp.MustCompile("/[^a-zA-Z0-9 ]/g")
+// 		expected := m1.ReplaceAllString(fileName, "${1}.${2}")
+
+// 		assert.Equal(t, expected, result)
+
+// 	})
+
+// }
