@@ -116,6 +116,43 @@ func FuzzFormatTime(f *testing.F) {
 	})
 }
 
+func TestNormalizeFilename(t *testing.T) {
+
+	input := []string{"áé ilksjdb", "klkjf 234 áéç", "sdfbIYV", "áç dfb"}
+
+	expected := []string{"ae-ilksjdb", "klkjf-234-aec", "sdfbIYV", "ac-dfb"}
+
+	for k, value := range input {
+		result := videos.normalizeFilename(value)
+		assert.Equal(t, result, expected[k])
+	}
+}
+
+func TestRenameFiles(t *testing.T) {
+	_ = os.Mkdir("videos", os.ModePerm)
+
+	f, err := os.Create("./videos/filé.mp4")
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer f.Close()
+
+	defer os.RemoveAll("./videos")
+
+	videos.renameFiles()
+
+	expected, _ := os.Getwd()
+
+	expected += "/videos/file.mp4"
+
+	result, _ := filepath.Glob(expected)
+
+	assert.Equal(t, expected, result[0])
+
+}
+
 // func FuzzNormalizeFilename(f *testing.F) {
 // 	seed := []string{"wrfgsg", "áéí", "ibjawrf89734", "edrfg sdfbsdfb", "çççttt123454  áá sdfvb"}
 
